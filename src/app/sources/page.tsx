@@ -12,10 +12,14 @@ async function getSources() {
 }
 
 function SourceRow({ source }: { source: Source }) {
-  const categoryColors = {
-    research: 'bg-purple-100 text-purple-800',
-    lab: 'bg-blue-100 text-blue-800',
-    ecosystem: 'bg-green-100 text-green-800',
+  const categoryColors: Record<string, string> = {
+    sar: 'bg-red-100 text-red-800',
+    aviation: 'bg-blue-100 text-blue-800',
+    maritime: 'bg-cyan-100 text-cyan-800',
+    manufacturing: 'bg-purple-100 text-purple-800',
+    geopolitical: 'bg-orange-100 text-orange-800',
+    customer: 'bg-green-100 text-green-800',
+    competitor: 'bg-yellow-100 text-yellow-800',
   };
 
   const typeColors = {
@@ -98,31 +102,43 @@ export default async function SourcesPage() {
       <div className="mb-8">
         <h1 className="text-2xl font-bold text-gray-900">Sources</h1>
         <p className="text-gray-500 mt-1">
-          Manage the feeds and websites that are monitored for AI news.
+          Manage the feeds and websites that are monitored for ACR industry intelligence.
         </p>
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-4 mb-8">
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
           <div className="text-2xl font-bold text-gray-900">{sources.length}</div>
-          <div className="text-sm text-gray-500">Total Sources</div>
+          <div className="text-sm text-gray-500">Total</div>
         </div>
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
           <div className="text-2xl font-bold text-green-600">{enabledCount}</div>
           <div className="text-sm text-gray-500">Active</div>
         </div>
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-          <div className="text-2xl font-bold text-purple-600">
-            {byCategory.research || 0}
-          </div>
-          <div className="text-sm text-gray-500">Research</div>
+          <div className="text-2xl font-bold text-red-600">{byCategory.sar || 0}</div>
+          <div className="text-sm text-gray-500">SAR</div>
         </div>
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-          <div className="text-2xl font-bold text-blue-600">
-            {byCategory.lab || 0}
-          </div>
-          <div className="text-sm text-gray-500">Labs</div>
+          <div className="text-2xl font-bold text-blue-600">{byCategory.aviation || 0}</div>
+          <div className="text-sm text-gray-500">Aviation</div>
+        </div>
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+          <div className="text-2xl font-bold text-cyan-600">{byCategory.maritime || 0}</div>
+          <div className="text-sm text-gray-500">Maritime</div>
+        </div>
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+          <div className="text-2xl font-bold text-purple-600">{byCategory.manufacturing || 0}</div>
+          <div className="text-sm text-gray-500">Mfg</div>
+        </div>
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+          <div className="text-2xl font-bold text-orange-600">{byCategory.geopolitical || 0}</div>
+          <div className="text-sm text-gray-500">Geo</div>
+        </div>
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+          <div className="text-2xl font-bold text-yellow-600">{byCategory.customer || 0}</div>
+          <div className="text-sm text-gray-500">Customer</div>
         </div>
       </div>
 

@@ -1,0 +1,14 @@
+# Python virtual environment
+podcast-venv/
+
+# Binary files
+bin/
+
+# Generated podcasts
+podcasts/
+
+# Supabase temp
+supabase/.temp/
+
+# Data files
+data/
