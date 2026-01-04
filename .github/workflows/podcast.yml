@@ -6,10 +6,47 @@ on:
     - cron: '30 21 * * *'
   workflow_dispatch: # Allow manual trigger
 
+env:
+  VERCEL_URL: https://acr-intel-agent.vercel.app
+  CRON_SECRET: ${{ secrets.CRON_SECRET }}
+
 jobs:
+  ingest-and-digest:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Run ingest (fetch RSS feeds)
+        run: |
+          echo "Triggering ingest..."
+          curl -X POST "${{ env.VERCEL_URL }}/api/ingest" \
+            -H "Content-Type: application/json" \
+            -H "Authorization: Bearer ${{ env.CRON_SECRET }}" \
+            --fail --show-error --max-time 300
+          echo "Ingest complete"
+
+      - name: Run summarize (AI processing)
+        run: |
+          echo "Triggering summarization..."
+          curl -X POST "${{ env.VERCEL_URL }}/api/summarize" \
+            -H "Content-Type: application/json" \
+            -H "Authorization: Bearer ${{ env.CRON_SECRET }}" \
+            --fail --show-error --max-time 300
+          echo "Summarization complete"
+
+      - name: Run digest (generate daily summary)
+        run: |
+          echo "Triggering digest generation..."
+          curl -X POST "${{ env.VERCEL_URL }}/api/digest" \
+            -H "Content-Type: application/json" \
+            -H "Authorization: Bearer ${{ env.CRON_SECRET }}" \
+            --fail --show-error --max-time 120
+          echo "Digest complete"
+
   generate-podcast:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    needs: ingest-and-digest
+    timeout-minutes: 15
 
     steps:
       - name: Checkout repository
