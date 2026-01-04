@@ -106,8 +106,8 @@ def generate_podcast_audio(text_content, output_path):
     conversation_config = {
         "word_count": 2000,
         "conversation_style": ["informative", "analytical", "conversational", "witty", "skeptical"],
-        "podcast_name": "ACR Intel Briefing",
-        "podcast_tagline": "Industry intelligence for aerospace and marine safety",
+        "podcast_name": "ACR AI News",
+        "podcast_tagline": "AI-powered industry intelligence for aerospace and marine safety",
         "creativity": 0.85,
         "roles_person1": "Marcus",
         "roles_person2": "Priya",
@@ -211,9 +211,9 @@ def send_podcast_email(audio_path, date):
         json={
             'from': 'ACR Intel Agent <onboarding@resend.dev>',
             'to': DIGEST_EMAIL_TO,
-            'subject': f'🎙️ ACR Industry Intel Podcast - {date}',
+            'subject': f'🎙️ ACR AI News - {date}',
             'html': f'''
-                <h1>Your ACR Industry Intelligence Podcast is Ready!</h1>
+                <h1>Your ACR AI News Podcast is Ready!</h1>
                 <p>Marcus and Priya break down today's key developments in SAR, aviation, maritime, and the broader safety equipment industry.</p>
                 <p>Date: {date}</p>
                 <p>The audio file is attached to this email.</p>
