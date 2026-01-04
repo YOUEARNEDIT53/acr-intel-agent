@@ -2,8 +2,8 @@ name: Generate ACR Intel Podcast
 
 on:
   schedule:
-    # Run once daily at 4:30 PM ET (21:30 UTC)
-    - cron: '30 21 * * *'
+    # Run once daily at 4:31 PM ET (21:31 UTC)
+    - cron: '31 21 * * *'
   workflow_dispatch: # Allow manual trigger
 
 env:

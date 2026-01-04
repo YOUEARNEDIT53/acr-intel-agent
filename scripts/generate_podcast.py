@@ -202,6 +202,9 @@ def send_podcast_email(audio_path, date):
     import base64
     audio_base64 = base64.b64encode(audio_data).decode('utf-8')
 
+    # Support comma-separated list of recipients
+    recipients = [email.strip() for email in DIGEST_EMAIL_TO.split(',') if email.strip()]
+
     response = requests.post(
         'https://api.resend.com/emails',
         headers={
@@ -210,7 +213,7 @@ def send_podcast_email(audio_path, date):
         },
         json={
             'from': 'ACR Intel Agent <onboarding@resend.dev>',
-            'to': DIGEST_EMAIL_TO,
+            'to': recipients,
             'subject': f'🎙️ ACR AI News - {date}',
             'html': f'''
                 <h1>Your ACR AI News Podcast is Ready!</h1>

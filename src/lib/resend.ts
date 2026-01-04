@@ -150,18 +150,21 @@ export async function sendDigestEmail(
   date: string,
   content: DigestContent
 ): Promise<{ success: boolean; error?: string }> {
-  const to = process.env.DIGEST_EMAIL_TO;
+  const toEnv = process.env.DIGEST_EMAIL_TO;
   const from = process.env.DIGEST_EMAIL_FROM || 'ACR Intel Agent <onboarding@resend.dev>';
 
-  if (!to) {
+  if (!toEnv) {
     return { success: false, error: 'DIGEST_EMAIL_TO not configured' };
   }
+
+  // Support comma-separated list of recipients
+  const to = toEnv.split(',').map(email => email.trim()).filter(Boolean);
 
   try {
     const resend = getResendClient();
     const { error } = await resend.emails.send({
       from,
-      to: [to],
+      to,
       subject: `ACR Industry Intel — ${new Date(date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`,
       html: generateDigestHtml(date, content),
       text: generateDigestText(date, content),
