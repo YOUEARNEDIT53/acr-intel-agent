@@ -8,7 +8,6 @@ on:
 
 env:
   VERCEL_URL: https://acr-intel-agent.vercel.app
-  CRON_SECRET: ${{ secrets.CRON_SECRET }}
 
 jobs:
   ingest-and-digest:
@@ -21,7 +20,6 @@ jobs:
           echo "Triggering ingest..."
           curl -X POST "${{ env.VERCEL_URL }}/api/ingest" \
             -H "Content-Type: application/json" \
-            -H "Authorization: Bearer ${{ env.CRON_SECRET }}" \
             --fail --show-error --max-time 300
           echo "Ingest complete"
 
@@ -30,7 +28,6 @@ jobs:
           echo "Triggering summarization..."
           curl -X POST "${{ env.VERCEL_URL }}/api/summarize" \
             -H "Content-Type: application/json" \
-            -H "Authorization: Bearer ${{ env.CRON_SECRET }}" \
             --fail --show-error --max-time 300
           echo "Summarization complete"
 
@@ -39,7 +36,6 @@ jobs:
           echo "Triggering digest generation..."
           curl -X POST "${{ env.VERCEL_URL }}/api/digest" \
             -H "Content-Type: application/json" \
-            -H "Authorization: Bearer ${{ env.CRON_SECRET }}" \
             --fail --show-error --max-time 120
           echo "Digest complete"
 
