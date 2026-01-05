@@ -212,7 +212,7 @@ def send_podcast_email(audio_path, date):
             'Content-Type': 'application/json'
         },
         json={
-            'from': 'ACR Intel Agent <acr-intel@ipguy.co>',
+            'from': 'ACR Intel Agent <acr-intel@mail.ipguy.co>',
             'to': recipients,
             'subject': f'🎙️ ACR AI News - {date}',
             'html': f'''

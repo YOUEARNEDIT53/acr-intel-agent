@@ -151,7 +151,7 @@ export async function sendDigestEmail(
   content: DigestContent
 ): Promise<{ success: boolean; error?: string }> {
   const toEnv = process.env.DIGEST_EMAIL_TO;
-  const from = process.env.DIGEST_EMAIL_FROM || 'ACR Intel Agent <acr-intel@ipguy.co>';
+  const from = process.env.DIGEST_EMAIL_FROM || 'ACR Intel Agent <acr-intel@mail.ipguy.co>';
 
   if (!toEnv) {
     return { success: false, error: 'DIGEST_EMAIL_TO not configured' };
