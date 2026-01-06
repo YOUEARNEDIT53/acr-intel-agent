@@ -176,8 +176,8 @@ export async function POST(request: NextRequest) {
     ];
     if (stockPatterns.some(p => title.includes(p))) return true;
 
-    // Filter items explicitly marked not relevant AND scoring below 50
-    if (item.relevance_score < 50 && whyMatters.includes('not directly relevant')) return true;
+    // Filter items explicitly marked not relevant only if scoring below minimum threshold
+    if (item.relevance_score < 35 && whyMatters.includes('not directly relevant')) return true;
 
     return false;
   };
