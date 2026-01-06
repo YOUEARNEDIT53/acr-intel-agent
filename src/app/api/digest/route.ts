@@ -163,9 +163,24 @@ export async function POST(request: NextRequest) {
   // Sort by relevance score
   itemsWithSummaries.sort((a, b) => b.relevance_score - a.relevance_score);
 
-  // Helper to check if item is explicitly marked as not relevant
-  // DISABLED: Rely only on score thresholds for now
-  const isExplicitlyNotRelevant = (_item: DigestItem) => false;
+  // Helper to filter out irrelevant content
+  const isIrrelevantContent = (item: DigestItem) => {
+    const title = item.title.toLowerCase();
+    const whyMatters = item.why_it_matters.toLowerCase();
+
+    // Filter out stock market / financial news by title patterns
+    const stockPatterns = [
+      'stock price', 'stock crosses', 'moving average',
+      'nasdaq:', 'nyse:', 'lon:', 'earnings report',
+      'share price', 'market cap'
+    ];
+    if (stockPatterns.some(p => title.includes(p))) return true;
+
+    // Filter items explicitly marked not relevant AND scoring below 50
+    if (item.relevance_score < 50 && whyMatters.includes('not directly relevant')) return true;
+
+    return false;
+  };
 
   // RELEVANCE FILTERING - Include items relevant to ACR's business
   // ACR makes ELTs, EPIRBs, PLBs - emergency beacons for aviation/maritime safety
@@ -181,13 +196,13 @@ export async function POST(request: NextRequest) {
 
   const content: DigestContent = {
     must_know: itemsWithSummaries
-      .filter((item) => !isExplicitlyNotRelevant(item) && (item.must_read || item.relevance_score >= MUST_KNOW_THRESHOLD))
+      .filter((item) => !isIrrelevantContent(item) && (item.must_read || item.relevance_score >= MUST_KNOW_THRESHOLD))
       .slice(0, 5),
     worth_a_look: itemsWithSummaries
-      .filter((item) => !isExplicitlyNotRelevant(item) && !item.must_read && item.relevance_score >= WORTH_A_LOOK_THRESHOLD && item.relevance_score < MUST_KNOW_THRESHOLD)
+      .filter((item) => !isIrrelevantContent(item) && !item.must_read && item.relevance_score >= WORTH_A_LOOK_THRESHOLD && item.relevance_score < MUST_KNOW_THRESHOLD)
       .slice(0, 10),
     quick_hits: itemsWithSummaries
-      .filter((item) => !isExplicitlyNotRelevant(item) && item.relevance_score >= QUICK_HITS_THRESHOLD && item.relevance_score < WORTH_A_LOOK_THRESHOLD)
+      .filter((item) => !isIrrelevantContent(item) && item.relevance_score >= QUICK_HITS_THRESHOLD && item.relevance_score < WORTH_A_LOOK_THRESHOLD)
       .slice(0, 10),
   };
 
