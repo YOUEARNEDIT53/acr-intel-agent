@@ -172,17 +172,17 @@ export async function POST(request: NextRequest) {
            whyMatters.includes('relevance unclear');
   };
 
-  // STRICT RELEVANCE FILTERING - Only include items truly relevant to ACR
+  // RELEVANCE FILTERING - Include items relevant to ACR's business
   // ACR makes ELTs, EPIRBs, PLBs - emergency beacons for aviation/maritime safety
-  // Minimum score thresholds (absolute, not relative):
-  // - Must Know: 75+ (direct impact on ACR business)
-  // - Worth a Look: 60-74 (industry relevant)
-  // - Quick Hits: 55-59 (tangentially relevant - raised from 50 to filter noise)
+  // Thresholds:
+  // - Must Know: 70+ (direct impact on ACR business)
+  // - Worth a Look: 50-69 (industry relevant)
+  // - Quick Hits: 35-49 (tangentially relevant - aviation/maritime news)
   // Items explicitly marked "not relevant" are always excluded
 
-  const MUST_KNOW_THRESHOLD = 75;
-  const WORTH_A_LOOK_THRESHOLD = 60;
-  const QUICK_HITS_THRESHOLD = 55;
+  const MUST_KNOW_THRESHOLD = 70;
+  const WORTH_A_LOOK_THRESHOLD = 50;
+  const QUICK_HITS_THRESHOLD = 35;
 
   const content: DigestContent = {
     must_know: itemsWithSummaries
