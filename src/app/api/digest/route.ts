@@ -164,13 +164,8 @@ export async function POST(request: NextRequest) {
   itemsWithSummaries.sort((a, b) => b.relevance_score - a.relevance_score);
 
   // Helper to check if item is explicitly marked as not relevant
-  const isExplicitlyNotRelevant = (item: DigestItem) => {
-    const whyMatters = item.why_it_matters.toLowerCase();
-    return whyMatters.includes('not directly relevant') ||
-           whyMatters.includes('not relevant to acr') ||
-           whyMatters.includes('no direct relevance') ||
-           whyMatters.includes('relevance unclear');
-  };
+  // DISABLED: Rely only on score thresholds for now
+  const isExplicitlyNotRelevant = (_item: DigestItem) => false;
 
   // RELEVANCE FILTERING - Include items relevant to ACR's business
   // ACR makes ELTs, EPIRBs, PLBs - emergency beacons for aviation/maritime safety
