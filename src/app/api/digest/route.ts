@@ -170,14 +170,18 @@ export async function POST(request: NextRequest) {
 
     // Filter out stock market / financial news by title patterns
     const stockPatterns = [
-      'stock price', 'stock crosses', 'moving average',
-      'nasdaq:', 'nyse:', 'lon:', 'earnings report',
-      'share price', 'market cap'
+      'stock price', 'stock crosses', 'moving average', '50 day', 'fifty day',
+      '(nasdaq:', '(nyse:', '(lon:', '(tse:', '(otc', '(bats:',
+      'earnings report', 'share price', 'market cap', 'shares pass',
+      'shares cross', 'stock passes'
     ];
     if (stockPatterns.some(p => title.includes(p))) return true;
 
-    // Filter items explicitly marked not relevant only if scoring below minimum threshold
-    if (item.relevance_score < 35 && whyMatters.includes('not directly relevant')) return true;
+    // Filter items where why_it_matters says "not relevant"
+    if (whyMatters.includes('not relevant')) return true;
+
+    // Filter items with no specific ACR relevance
+    if (whyMatters.includes('no relevance')) return true;
 
     return false;
   };
