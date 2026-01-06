@@ -182,17 +182,15 @@ export async function POST(request: NextRequest) {
     return false;
   };
 
-  // RELEVANCE FILTERING - Include items relevant to ACR's business
-  // ACR makes ELTs, EPIRBs, PLBs - emergency beacons for aviation/maritime safety
-  // Thresholds:
-  // - Must Know: 70+ (direct impact on ACR business)
-  // - Worth a Look: 50-69 (industry relevant)
-  // - Quick Hits: 35-49 (tangentially relevant - aviation/maritime news)
-  // Items explicitly marked "not relevant" are always excluded
+  // RELEVANCE FILTERING - Include items relevant to ACR's beacon business
+  // Based on comprehensive ACR relevance guide - score 50+ for inclusion
+  // - Must Know: 80+ (direct ACR impact, beacon regs, competitor launches)
+  // - Worth a Look: 60-79 (aviation/maritime safety, SAR operations)
+  // - Quick Hits: 50-59 (tangentially related, market trends)
 
-  const MUST_KNOW_THRESHOLD = 70;
-  const WORTH_A_LOOK_THRESHOLD = 50;
-  const QUICK_HITS_THRESHOLD = 35;
+  const MUST_KNOW_THRESHOLD = 80;
+  const WORTH_A_LOOK_THRESHOLD = 60;
+  const QUICK_HITS_THRESHOLD = 50;
 
   const content: DigestContent = {
     must_know: itemsWithSummaries

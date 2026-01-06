@@ -13,18 +13,39 @@ function getAnthropicClient(): Anthropic {
   return _anthropic;
 }
 
-const SUMMARIZATION_PROMPT = `You are a STRICT industry intelligence analyst for ACR Electronics, a $75M aerospace and marine safety equipment manufacturer specializing in:
-- ELTs (Emergency Locator Transmitters) for aircraft
-- EPIRBs (Emergency Position Indicating Radio Beacons) for vessels
-- PLBs (Personal Locator Beacons) for individuals
-- 406 MHz emergency beacon technology, Cospas-Sarsat satellite system
+const SUMMARIZATION_PROMPT = `You are filtering news articles for ACR Electronics, a manufacturer of emergency beacons (EPIRBs, ELTs, PLBs) for aviation and maritime markets.
 
-BE VERY STRICT about relevance scoring. Most general news is NOT relevant to ACR.
+AN ARTICLE IS RELEVANT IF IT DISCUSSES:
+
+1. EMERGENCY BEACONS: Any mention of EPIRB, ELT, PLB, 406 MHz beacon, distress beacon, Cospas-Sarsat, MEOSAR, LEOSAR, GEOSAR, GMDSS, beacon registration/testing, Return Link Service (RLS), survival beacon, rescue beacon, SART, AIS MOB
+
+2. DIRECT COMPETITORS: McMurdo, Ocean Signal, Kannad, Orolia, Safran (beacon context), Garmin inReach/PLB, SPOT satellite messenger, ACR Artex
+
+3. REGULATIONS AFFECTING BEACONS: TSO-C126, TSO-C91a, RTCA DO-204, ETSO-C126, SOLAS Chapter IV, FAA ELT mandates, USCG safety equipment requirements, IMO Maritime Safety Committee decisions, ICAO Annex 6
+
+4. SEARCH & RESCUE OPERATIONS: Coast Guard rescues where beacons were used, SAR helicopter operations, maritime/aviation survivor rescues, missing vessel/aircraft stories
+
+5. AVIATION SAFETY EQUIPMENT: General aviation safety requirements, avionics certification, aircraft emergency equipment, experimental aircraft safety (NOT airline financial news)
+
+6. MARITIME SAFETY EQUIPMENT: Vessel safety requirements, USCG boating regulations, life raft equipment, recreational and commercial vessel safety, offshore sailing safety
+
+7. ELECTRONICS SUPPLY CHAIN (affecting beacon manufacturing): RF component availability, GPS modules, lithium battery shipping regulations, PCB manufacturing, tariffs on electronic components
+
+AN ARTICLE IS NOT RELEVANT IF:
+- Consumer electronics (phones, laptops, TVs)
+- Automotive industry (unless vehicle emergency beacons)
+- Military procurement (unless SAR beacons)
+- Airline routes, earnings, or passenger experience
+- Shipping container rates or retail supply chains
+- "Beacon" meaning Bluetooth beacon or web beacon
+- Stock prices, moving averages, financial trading
+- Celebrity news, entertainment, sports
+- General geopolitical news without safety equipment angle
 
 Return JSON:
 {
   "summary": "One clear sentence summarizing what happened",
-  "why_it_matters": "SPECIFIC relevance to ACR's beacon business (or 'Not directly relevant to ACR' if score <50)",
+  "why_it_matters": "SPECIFIC relevance to ACR's beacon business",
   "category": "regulatory|product|market|supply_chain|trade|technology|competitor",
   "topics": ["tag1", "tag2", "tag3"],
   "relevance_score": 0-100,
@@ -32,29 +53,23 @@ Return JSON:
   "hype_flag": true/false
 }
 
-SCORING - BE STRICT:
-90-100: ONLY for direct ACR impact - beacon regulations, Cospas-Sarsat changes, 406MHz specs, direct competitor product launch
-80-89: Industry regulations affecting ELT/EPIRB/PLB, major SAR system changes, MEOSAR updates
-70-79: Aviation/maritime safety regulations, FAA/EASA/IMO rules affecting safety equipment
-60-69: General aviation/maritime industry news affecting ACR's customer base
-50-59: Tangentially related - general defense/aerospace contracts, broad market trends
-40-49: Loosely related - general shipping/aviation news without safety equipment angle
-0-39: NOT RELEVANT - politics, entertainment, general business, unrelated technology
+SCORING GUIDE:
+90-100: Direct ACR business impact - beacon regulations, Cospas-Sarsat changes, 406MHz specs, competitor product launch, SAR rescue using beacons
+80-89: Industry regulations affecting ELT/EPIRB/PLB, MEOSAR updates, GMDSS changes, major competitor news
+70-79: Aviation/maritime safety regulations, FAA/EASA/IMO rules affecting safety equipment, SAR operations
+60-69: General aviation/maritime safety news, boating/flying market trends, supply chain affecting electronics
+50-59: Tangentially related - recreational boating growth, aviation training trends
+40-49: Loosely related - general shipping/aviation without safety angle
+0-39: NOT RELEVANT - exclude from digest
 
-AUTOMATICALLY SCORE LOW (under 30):
-- Stock market/financial news about ANY company not directly in ACR's supply chain
-- General geopolitical news without direct aerospace/maritime safety impact
-- Entertainment, sports, celebrity news
-- General business news not affecting aerospace/marine supply chain
-- Technology news not related to GPS/GNSS/RF/satellite/beacon tech
-- Military news not involving search-and-rescue or emergency systems
-- Moving averages, stock price, earnings reports for non-relevant companies
-
-ONLY mark must_read=true for:
-- New 406MHz beacon regulations or Cospas-Sarsat spec changes
-- FAA/EASA airworthiness directives mentioning ELTs
+MUST_READ = true only for:
+- New 406MHz beacon regulations or Cospas-Sarsat changes
+- FAA/EASA airworthiness directives affecting ELTs
 - IMO/SOLAS changes affecting EPIRBs
-- Direct competitor (McMurdo, Ocean Signal, Garmin InReach, ACR competitor) announcements
+- Direct competitor product announcements
+- Major SAR rescue attributed to beacon activation
+
+For borderline cases: Include if a program manager at a beacon manufacturer would find it useful for competitive intelligence, regulatory compliance, or supply chain planning.
 
 Return ONLY valid JSON, no markdown.`;
 
