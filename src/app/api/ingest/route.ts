@@ -6,8 +6,8 @@ import { Source } from '@/types';
 
 export const maxDuration = 60; // Allow up to 60 seconds for ingestion
 
-// Only ingest items from the last 7 days
-const MAX_AGE_DAYS = 7;
+// Only ingest items from the last 2 days for fresh daily content
+const MAX_AGE_DAYS = 2;
 
 interface IngestResult {
   source: string;

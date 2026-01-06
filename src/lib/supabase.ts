@@ -61,7 +61,7 @@ export type Database = {
           name: string;
           url: string;
           type: 'rss' | 'api' | 'scrape';
-          category: 'research' | 'lab' | 'ecosystem';
+          category: 'sar' | 'aviation' | 'maritime' | 'manufacturing' | 'geopolitical' | 'customer' | 'competitor';
           enabled: boolean;
           last_fetched: string | null;
           created_at: string;
@@ -88,10 +88,11 @@ export type Database = {
           item_id: string;
           summary: string;
           why_it_matters: string;
-          category: 'research' | 'product' | 'engineering' | 'policy' | 'security' | 'business';
+          category: 'regulatory' | 'product' | 'market' | 'supply_chain' | 'trade' | 'technology' | 'competitor';
           topics: string[];
           relevance_score: number;
           must_read: boolean;
+          hype_flag: boolean;
           created_at: string;
         };
         Insert: Omit<Database['public']['Tables']['summaries']['Row'], 'id' | 'created_at'>;

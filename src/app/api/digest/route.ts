@@ -73,11 +73,13 @@ export async function POST(request: NextRequest) {
     });
   }
 
-  // Calculate the date range for items (last 24 hours or since last digest)
+  // Calculate the date range for items (last 24 hours)
   const yesterday = new Date();
   yesterday.setDate(yesterday.getDate() - 1);
+  const yesterdayISO = yesterday.toISOString();
 
   // Fetch summaries with their items from the last 24 hours
+  // Filter by summary created_at to only get recently summarized items
   const { data: summaries, error: summariesError } = await supabaseAdmin
     .from('summaries')
     .select(`
@@ -87,6 +89,7 @@ export async function POST(request: NextRequest) {
       topics,
       relevance_score,
       must_read,
+      created_at,
       item:items(
         id,
         title,
@@ -95,6 +98,7 @@ export async function POST(request: NextRequest) {
         fetched_at
       )
     `)
+    .gte('created_at', yesterdayISO)
     .order('relevance_score', { ascending: false });
 
   const itemsError = summariesError;
@@ -159,27 +163,47 @@ export async function POST(request: NextRequest) {
   // Sort by relevance score
   itemsWithSummaries.sort((a, b) => b.relevance_score - a.relevance_score);
 
-  // Categorize into sections (use relative thresholds based on available scores)
-  const scores = itemsWithSummaries.map(i => i.relevance_score);
-  const maxScore = Math.max(...scores, 0);
-  const highThreshold = Math.max(maxScore * 0.7, 60);
-  const midThreshold = Math.max(maxScore * 0.4, 30);
+  // Helper to check if item is explicitly marked as not relevant
+  const isExplicitlyNotRelevant = (item: DigestItem) => {
+    const whyMatters = item.why_it_matters.toLowerCase();
+    return whyMatters.includes('not directly relevant') ||
+           whyMatters.includes('not relevant to acr') ||
+           whyMatters.includes('no direct relevance') ||
+           whyMatters.includes('relevance unclear');
+  };
+
+  // STRICT RELEVANCE FILTERING - Only include items truly relevant to ACR
+  // ACR makes ELTs, EPIRBs, PLBs - emergency beacons for aviation/maritime safety
+  // Minimum score thresholds (absolute, not relative):
+  // - Must Know: 75+ (direct impact on ACR business)
+  // - Worth a Look: 60-74 (industry relevant)
+  // - Quick Hits: 55-59 (tangentially relevant - raised from 50 to filter noise)
+  // Items explicitly marked "not relevant" are always excluded
+
+  const MUST_KNOW_THRESHOLD = 75;
+  const WORTH_A_LOOK_THRESHOLD = 60;
+  const QUICK_HITS_THRESHOLD = 55;
 
   const content: DigestContent = {
     must_know: itemsWithSummaries
-      .filter((item) => item.must_read || item.relevance_score >= highThreshold)
-      .slice(0, 3),
+      .filter((item) => !isExplicitlyNotRelevant(item) && (item.must_read || item.relevance_score >= MUST_KNOW_THRESHOLD))
+      .slice(0, 5),
     worth_a_look: itemsWithSummaries
-      .filter((item) => !item.must_read && item.relevance_score >= midThreshold && item.relevance_score < highThreshold)
-      .slice(0, 7),
+      .filter((item) => !isExplicitlyNotRelevant(item) && !item.must_read && item.relevance_score >= WORTH_A_LOOK_THRESHOLD && item.relevance_score < MUST_KNOW_THRESHOLD)
+      .slice(0, 10),
     quick_hits: itemsWithSummaries
-      .filter((item) => item.relevance_score > 0 && item.relevance_score < midThreshold)
+      .filter((item) => !isExplicitlyNotRelevant(item) && item.relevance_score >= QUICK_HITS_THRESHOLD && item.relevance_score < WORTH_A_LOOK_THRESHOLD)
       .slice(0, 10),
   };
 
-  // If no must_know items, promote top worth_a_look items
+  // Only promote if we have high-scoring items (don't pad with low-relevance content)
   if (content.must_know.length === 0 && content.worth_a_look.length > 0) {
-    content.must_know = content.worth_a_look.splice(0, 2);
+    // Only promote items scoring 70+
+    const promotable = content.worth_a_look.filter(i => i.relevance_score >= 70);
+    if (promotable.length > 0) {
+      content.must_know = promotable.splice(0, 2);
+      content.worth_a_look = content.worth_a_look.filter(i => i.relevance_score < 70 || content.must_know.includes(i));
+    }
   }
 
   const totalItems =
@@ -196,7 +220,7 @@ export async function POST(request: NextRequest) {
         total_items_fetched: items?.length || 0,
         items_with_summaries: itemsWithSummaries.length,
         sample_scores: itemsWithSummaries.slice(0, 5).map(i => i.relevance_score),
-        thresholds: { highThreshold, midThreshold, maxScore },
+        thresholds: { MUST_KNOW_THRESHOLD, WORTH_A_LOOK_THRESHOLD, QUICK_HITS_THRESHOLD },
       }
     });
   }
