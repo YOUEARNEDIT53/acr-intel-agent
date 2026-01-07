@@ -35,6 +35,14 @@ export async function POST(request: NextRequest) {
     // Use defaults
   }
 
+  // Cleanup: Delete old digests and summaries (older than 3 days)
+  const threeDaysAgo = new Date();
+  threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
+  const cleanupDate = formatDate(threeDaysAgo);
+
+  await supabaseAdmin.from('digests').delete().lt('date', cleanupDate);
+  await supabaseAdmin.from('summaries').delete().lt('created_at', threeDaysAgo.toISOString());
+
   // Check if digest already exists for this date
   const { data: existingDigest } = await supabaseAdmin
     .from('digests')
