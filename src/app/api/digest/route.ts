@@ -204,7 +204,9 @@ export async function POST(request: NextRequest) {
       'stock price', 'stock crosses', 'moving average', '50 day', 'fifty day',
       '(nasdaq:', '(nyse:', '(lon:', '(tse:', '(otc', '(bats:',
       'earnings report', 'share price', 'market cap', 'shares pass',
-      'shares cross', 'stock passes'
+      'shares cross', 'stock passes', 'stock holdings', 'etf $', '$ stock',
+      'jpmorgan', 'hedge fund', 'wealth advisor', 'holdings increased',
+      'holdings decreased', 'portfolio'
     ];
     if (stockPatterns.some(p => title.includes(p))) return true;
 
