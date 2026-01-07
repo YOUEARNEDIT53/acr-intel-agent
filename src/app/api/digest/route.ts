@@ -81,13 +81,33 @@ export async function POST(request: NextRequest) {
     });
   }
 
-  // Calculate the date range for items (last 24 hours)
-  const yesterday = new Date();
-  yesterday.setDate(yesterday.getDate() - 1);
-  const yesterdayISO = yesterday.toISOString();
+  // Get recent digests to avoid duplicate content
+  const { data: recentDigests } = await supabaseAdmin
+    .from('digests')
+    .select('created_at, content')
+    .order('created_at', { ascending: false })
+    .limit(3);
 
-  // Fetch summaries with their items from the last 24 hours
-  // Filter by summary created_at to only get recently summarized items
+  // Extract URLs from previous digests to exclude them
+  const previousUrls = new Set<string>();
+  for (const d of recentDigests || []) {
+    const content = d.content as { must_know?: Array<{url: string}>; worth_a_look?: Array<{url: string}>; quick_hits?: Array<{url: string}> };
+    for (const item of content?.must_know || []) previousUrls.add(item.url);
+    for (const item of content?.worth_a_look || []) previousUrls.add(item.url);
+    for (const item of content?.quick_hits || []) previousUrls.add(item.url);
+  }
+
+  const lastDigest = recentDigests?.[0];
+
+  // Only include summaries created AFTER the last digest was sent
+  // This prevents the same articles from appearing in multiple digests
+  // Fall back to 24 hours if no previous digest exists
+  const cutoffDate = lastDigest?.created_at
+    ? new Date(lastDigest.created_at)
+    : new Date(Date.now() - 24 * 60 * 60 * 1000);
+  const cutoffISO = cutoffDate.toISOString();
+
+  // Fetch summaries with their items created after the last digest
   const { data: summaries, error: summariesError } = await supabaseAdmin
     .from('summaries')
     .select(`
@@ -106,7 +126,7 @@ export async function POST(request: NextRequest) {
         fetched_at
       )
     `)
-    .gte('created_at', yesterdayISO)
+    .gt('created_at', cutoffISO)
     .order('relevance_score', { ascending: false });
 
   const itemsError = summariesError;
@@ -175,6 +195,9 @@ export async function POST(request: NextRequest) {
   const isIrrelevantContent = (item: DigestItem) => {
     const title = item.title.toLowerCase();
     const whyMatters = item.why_it_matters.toLowerCase();
+
+    // Filter out items already sent in previous digests
+    if (previousUrls.has(item.url)) return true;
 
     // Filter out stock market / financial news by title patterns
     const stockPatterns = [
