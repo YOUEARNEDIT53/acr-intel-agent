@@ -50,7 +50,11 @@ function formatSection(title: string, emoji: string, items: DigestItem[]): strin
 }
 
 export function generateDigestHtml(date: string, content: DigestContent): string {
-  const formattedDate = new Date(date).toLocaleDateString('en-US', {
+  // Parse date string properly to avoid timezone issues
+  // date is in format 'YYYY-MM-DD'
+  const [year, month, day] = date.split('-').map(Number);
+  const dateObj = new Date(year, month - 1, day); // month is 0-indexed
+  const formattedDate = dateObj.toLocaleDateString('en-US', {
     weekday: 'long',
     year: 'numeric',
     month: 'long',
@@ -107,7 +111,10 @@ export function generateDigestHtml(date: string, content: DigestContent): string
 
 export function generateDigestText(date: string, content: DigestContent): string {
   const lines: string[] = [];
-  const formattedDate = new Date(date).toLocaleDateString('en-US', {
+  // Parse date string properly to avoid timezone issues
+  const [year, month, day] = date.split('-').map(Number);
+  const dateObj = new Date(year, month - 1, day);
+  const formattedDate = dateObj.toLocaleDateString('en-US', {
     weekday: 'long',
     year: 'numeric',
     month: 'long',
