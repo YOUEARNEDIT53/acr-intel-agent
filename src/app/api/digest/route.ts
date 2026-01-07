@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import { sendDigestEmail } from '@/lib/resend';
+import { generateExecutiveSummary } from '@/lib/claude';
 import { DigestContent, DigestItem } from '@/types';
 
 export const maxDuration = 60;
@@ -268,6 +269,15 @@ export async function POST(request: NextRequest) {
         thresholds: { MUST_KNOW_THRESHOLD, WORTH_A_LOOK_THRESHOLD, QUICK_HITS_THRESHOLD },
       }
     });
+  }
+
+  // Generate executive summary
+  const allItems = [...content.must_know, ...content.worth_a_look, ...content.quick_hits];
+  try {
+    content.executive_summary = await generateExecutiveSummary(allItems);
+  } catch (error) {
+    console.error('Failed to generate executive summary:', error);
+    content.executive_summary = undefined;
   }
 
   // Save digest

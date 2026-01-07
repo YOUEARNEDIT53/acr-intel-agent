@@ -76,6 +76,15 @@ export function generateDigestHtml(date: string, content: DigestContent): string
             </p>
           </td>
         </tr>
+        ${content.executive_summary ? `
+        <tr>
+          <td style="padding: 16px 0; border-bottom: 1px solid #eee;">
+            <p style="margin: 0; font-size: 15px; line-height: 1.6; color: #333;">
+              <strong>Today's Brief:</strong> ${content.executive_summary}
+            </p>
+          </td>
+        </tr>
+        ` : ''}
         <tr>
           <td style="padding-top: 20px;">
             ${formatSection('Must Know', '🔴', content.must_know)}
@@ -108,6 +117,14 @@ export function generateDigestText(date: string, content: DigestContent): string
   lines.push(`The ACR Report - ${formattedDate}`);
   lines.push('='.repeat(50));
   lines.push('');
+
+  if (content.executive_summary) {
+    lines.push('TODAY\'S BRIEF:');
+    lines.push(content.executive_summary);
+    lines.push('');
+    lines.push('-'.repeat(50));
+    lines.push('');
+  }
 
   if (content.must_know.length > 0) {
     lines.push('🔴 MUST KNOW');

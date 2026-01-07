@@ -47,6 +47,7 @@ export interface Digest {
 }
 
 export interface DigestContent {
+  executive_summary?: string;
   must_know: DigestItem[];
   worth_a_look: DigestItem[];
   quick_hits: DigestItem[];

@@ -133,6 +133,41 @@ ${truncatedContent || '(No content available - summarize based on title only)'}`
   }
 }
 
+export async function generateExecutiveSummary(
+  items: Array<{ title: string; summary: string; why_it_matters: string }>
+): Promise<string> {
+  if (items.length === 0) {
+    return 'No significant industry news today.';
+  }
+
+  const anthropic = getAnthropicClient();
+  const itemsList = items
+    .slice(0, 10)
+    .map(i => `• ${i.title}: ${i.summary}`)
+    .join('\n');
+
+  const message = await anthropic.messages.create({
+    model: 'claude-sonnet-4-20250514',
+    max_tokens: 300,
+    messages: [
+      {
+        role: 'user',
+        content: `You are writing the executive summary for ACR Electronics' daily intelligence briefing. ACR makes emergency beacons (EPIRBs, ELTs, PLBs) for aviation and maritime markets.
+
+Write a single paragraph (3-4 sentences max) summarizing the key takeaways from today's news. Be direct, specific, and actionable. Focus on business implications for the emergency beacon industry.
+
+Today's headlines:
+${itemsList}
+
+Write ONLY the summary paragraph, no intro or sign-off.`,
+      },
+    ],
+  });
+
+  const responseText = message.content[0].type === 'text' ? message.content[0].text : '';
+  return responseText.trim();
+}
+
 function validateCategory(category: string): ItemCategory {
   const valid: ItemCategory[] = [
     'regulatory', 'product', 'market', 'supply_chain',
