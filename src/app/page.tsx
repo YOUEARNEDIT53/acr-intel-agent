@@ -4,6 +4,12 @@ import { supabaseAdmin } from '@/lib/supabase';
 import { DigestContent } from '@/types';
 import { FeedbackButtons } from '@/components/FeedbackButtons';
 
+// Helper to parse date string without timezone issues
+function parseDate(dateStr: string): Date {
+  const [year, month, day] = dateStr.split('-').map(Number);
+  return new Date(year, month - 1, day);
+}
+
 async function checkDatabaseSetup(): Promise<boolean> {
   try {
     const { error } = await supabaseAdmin.from('sources').select('id').limit(1);
@@ -184,7 +190,7 @@ export default async function Dashboard() {
                 Latest Digest
                 {latestDigest && (
                   <span className="ml-2 text-sm font-normal text-gray-500">
-                    {new Date(latestDigest.date).toLocaleDateString('en-US', {
+                    {parseDate(latestDigest.date).toLocaleDateString('en-US', {
                       weekday: 'long',
                       month: 'long',
                       day: 'numeric',
@@ -243,7 +249,7 @@ export default async function Dashboard() {
                         className="flex items-center justify-between py-2 px-3 rounded hover:bg-gray-50"
                       >
                         <span className="text-sm text-gray-700">
-                          {new Date(digest.date).toLocaleDateString('en-US', {
+                          {parseDate(digest.date).toLocaleDateString('en-US', {
                             month: 'short',
                             day: 'numeric',
                           })}
@@ -301,5 +307,5 @@ export default async function Dashboard() {
   );
 }
 
-// Revalidate every 5 minutes
-export const revalidate = 300;
+// Revalidate every 60 seconds for fresher data
+export const revalidate = 60;
