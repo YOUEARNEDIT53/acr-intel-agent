@@ -21,8 +21,27 @@ from supabase import create_client
 SUPABASE_URL = os.getenv('NEXT_PUBLIC_SUPABASE_URL')
 SUPABASE_KEY = os.getenv('SUPABASE_SERVICE_KEY')
 RESEND_API_KEY = os.getenv('RESEND_API_KEY')
-DIGEST_EMAIL_TO = os.getenv('DIGEST_EMAIL_TO', 'youearnedit@gmail.com')
+DIGEST_EMAIL_TO_ENV = os.getenv('DIGEST_EMAIL_TO', 'youearnedit@gmail.com')
 DIGEST_EMAIL_FROM = os.getenv('DIGEST_EMAIL_FROM', 'ACR Intel Agent <acr-intel@mail.ipguy.co>')
+
+
+def get_digest_recipients():
+    """Get recipients from database with env var fallback"""
+    try:
+        supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
+        result = supabase.table('settings') \
+            .select('value') \
+            .eq('key', 'digest_recipients') \
+            .single() \
+            .execute()
+
+        if result.data and result.data.get('value'):
+            return [e.strip() for e in result.data['value'].split(',') if e.strip()]
+    except Exception as e:
+        print(f"   Note: Could not read from settings table ({e}), using env var")
+
+    # Fallback to environment variable
+    return [e.strip() for e in DIGEST_EMAIL_TO_ENV.split(',') if e.strip()]
 
 def get_recent_summaries(supabase, hours=24):
     """Get summaries from the last N hours, filtered by item publication date"""
@@ -137,7 +156,7 @@ def format_email_html(date, content):
 
 def send_email(date, content):
     """Send digest email via Resend"""
-    recipients = [e.strip() for e in DIGEST_EMAIL_TO.split(',') if e.strip()]
+    recipients = get_digest_recipients()
 
     response = requests.post(
         'https://api.resend.com/emails',
@@ -204,7 +223,8 @@ def main():
     print("\n4. Sending email...")
     success, response = send_email(today, content)
     if success:
-        print(f"   Email sent to: {DIGEST_EMAIL_TO}")
+        recipients = get_digest_recipients()
+        print(f"   Email sent to {len(recipients)} recipients")
         supabase.table('digests').update({'email_sent': True}).eq('date', today).execute()
     else:
         print(f"   Email failed: {response}")

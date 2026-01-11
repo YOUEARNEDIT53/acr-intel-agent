@@ -94,3 +94,11 @@ export interface ScrapedItem {
   content?: string;
   published_at?: string;
 }
+
+export interface Setting {
+  id: string;
+  key: string;
+  value: string;
+  description: string | null;
+  updated_at: string;
+}

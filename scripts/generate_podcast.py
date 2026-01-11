@@ -29,8 +29,27 @@ from supabase import create_client
 SUPABASE_URL = os.getenv('NEXT_PUBLIC_SUPABASE_URL')
 SUPABASE_KEY = os.getenv('SUPABASE_SERVICE_KEY')
 RESEND_API_KEY = os.getenv('RESEND_API_KEY')
-DIGEST_EMAIL_TO = os.getenv('DIGEST_EMAIL_TO', 'youearnedit@gmail.com')
+DIGEST_EMAIL_TO_ENV = os.getenv('DIGEST_EMAIL_TO', 'youearnedit@gmail.com')
 ANTHROPIC_API_KEY = os.getenv('ANTHROPIC_API_KEY')
+
+
+def get_digest_recipients():
+    """Get recipients from database with env var fallback"""
+    try:
+        supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
+        result = supabase.table('settings') \
+            .select('value') \
+            .eq('key', 'digest_recipients') \
+            .single() \
+            .execute()
+
+        if result.data and result.data.get('value'):
+            return [e.strip() for e in result.data['value'].split(',') if e.strip()]
+    except Exception as e:
+        print(f"   Note: Could not read from settings table ({e}), using env var")
+
+    # Fallback to environment variable
+    return [e.strip() for e in DIGEST_EMAIL_TO_ENV.split(',') if e.strip()]
 
 # Output directory for podcasts
 OUTPUT_DIR = Path(__file__).parent.parent / 'podcasts'
@@ -202,8 +221,8 @@ def send_podcast_email(audio_path, date):
     import base64
     audio_base64 = base64.b64encode(audio_data).decode('utf-8')
 
-    # Support comma-separated list of recipients
-    recipients = [email.strip() for email in DIGEST_EMAIL_TO.split(',') if email.strip()]
+    # Get recipients from database (with env var fallback)
+    recipients = get_digest_recipients()
 
     response = requests.post(
         'https://api.resend.com/emails',
@@ -233,7 +252,7 @@ def send_podcast_email(audio_path, date):
     )
 
     if response.status_code == 200:
-        print(f"Podcast email sent successfully to {DIGEST_EMAIL_TO}")
+        print(f"Podcast email sent successfully to {len(recipients)} recipients")
         return True
     else:
         print(f"Failed to send email: {response.text}")

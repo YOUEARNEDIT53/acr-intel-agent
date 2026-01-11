@@ -1,5 +1,6 @@
 import { Resend } from 'resend';
 import { DigestContent, DigestItem } from '@/types';
+import { supabaseAdmin } from '@/lib/supabase';
 
 // Lazy initialization to avoid build-time errors
 let _resend: Resend | null = null;
@@ -167,19 +168,41 @@ export function generateDigestText(date: string, content: DigestContent): string
   return lines.join('\n');
 }
 
+// Get recipients from database with env var fallback
+async function getDigestRecipients(): Promise<string[]> {
+  try {
+    const { data } = await supabaseAdmin
+      .from('settings')
+      .select('value')
+      .eq('key', 'digest_recipients')
+      .single();
+
+    if (data?.value) {
+      return data.value.split(',').map((e: string) => e.trim()).filter(Boolean);
+    }
+  } catch {
+    // Table might not exist yet, fall back to env var
+  }
+
+  // Fallback to environment variable
+  const toEnv = process.env.DIGEST_EMAIL_TO;
+  if (toEnv) {
+    return toEnv.split(',').map(email => email.trim()).filter(Boolean);
+  }
+
+  return [];
+}
+
 export async function sendDigestEmail(
   date: string,
   content: DigestContent
 ): Promise<{ success: boolean; error?: string }> {
-  const toEnv = process.env.DIGEST_EMAIL_TO;
   const from = process.env.DIGEST_EMAIL_FROM || 'ACR Intel Agent <acr-intel@mail.ipguy.co>';
+  const to = await getDigestRecipients();
 
-  if (!toEnv) {
-    return { success: false, error: 'DIGEST_EMAIL_TO not configured' };
+  if (to.length === 0) {
+    return { success: false, error: 'No recipients configured' };
   }
-
-  // Support comma-separated list of recipients
-  const to = toEnv.split(',').map(email => email.trim()).filter(Boolean);
 
   try {
     const resend = getResendClient();
