@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """
 ACR Intel Agent - Industry Intelligence Podcast Generator
-Generates a two-host podcast (Marcus & Priya) covering SAR/ELT/EPIRB/PLB industry intelligence
+Generates a two-host podcast (Gary McGee & Margaret Ann Jenkins) covering SAR/ELT/EPIRB/PLB industry intelligence
+~5 minute broadcast format
 """
 
 import os
@@ -78,7 +79,9 @@ def format_digest_for_podcast(digest):
 
     text = f"""# The ACR Report — {date}
 
-Welcome to The ACR Report, your daily industry intelligence briefing covering Search & Rescue, aviation safety, maritime regulations, and the broader aerospace/marine equipment market.
+Welcome to The ACR Report, your daily industry intelligence briefing covering BOTH aerospace/aviation (ELTs, avionics, FAA, EASA, general aviation safety) AND maritime (EPIRBs, PLBs, USCG, IMO, SOLAS) beacon technology markets equally.
+
+IMPORTANT: Coverage must be balanced between aerospace/aviation AND maritime topics. ACR operates in BOTH markets — ELTs for aviation and EPIRBs/PLBs for maritime. Do NOT lean heavily toward one sector. If the news skews one way, provide context and analysis for the underrepresented sector.
 
 ## CRITICAL UPDATES - Must Know
 
@@ -120,37 +123,38 @@ That's The ACR Report for today. Stay ahead of regulatory changes, track competi
 def generate_podcast_audio(text_content, output_path):
     """Generate podcast audio using Podcastfy with Edge TTS (free)"""
 
-    # Marcus & Priya conversation config - industry intelligence style
-    # Target: ~15 minutes max (~2000 words at 130 wpm)
+    # Gary & Margaret conversation config - industry intelligence style
+    # Target: ~5 minutes (~650 words at 130 wpm)
     conversation_config = {
-        "word_count": 2000,
+        "word_count": 650,
         "conversation_style": ["informative", "analytical", "conversational", "witty", "skeptical"],
         "podcast_name": "The ACR Report Podcast",
-        "podcast_tagline": "Industry intelligence for aerospace and marine safety",
+        "podcast_tagline": "The News in the World of Beacon Tech in five minutes",
         "creativity": 0.85,
-        "roles_person1": "Marcus",
-        "roles_person2": "Priya",
+        "roles_person1": "Margaret Ann Jenkins",
+        "roles_person2": "Gary McGee",
         "dialogue_structure": [
-            "Quick intro with what's on the agenda today",
-            "Critical Updates - regulatory and major industry news",
-            "Deep Dive - the most important story with technical and business context",
-            "Market Watch - competitor moves, customer trends",
-            "Quick Hits - rapid-fire updates",
-            "Sign off with key takeaways"
+            "Quick intro - 'The News in the World of Beacon Tech in five minutes'",
+            "Critical Updates - top 1-2 regulatory or major industry news items",
+            "Brief analysis - business and technical implications",
+            "Quick Hits - rapid-fire remaining updates",
+            "Sign off with key takeaway"
         ],
         "engagement_techniques": [
-            "Marcus explains technical details with memorable analogies",
-            "Priya translates implications for product and business teams",
+            "Gary explains technical details with memorable analogies",
+            "Margaret translates implications for product and business teams",
             "They ask each other follow-up questions",
             "Reference what companies said vs what they're doing now",
             "Occasional dry humor and friendly disagreements",
             "Call out hype vs substance",
-            "Connect stories to broader industry trends"
+            "Connect stories to broader industry trends",
+            "Always bridge between aerospace/ELT and maritime/EPIRB implications",
+            "If a maritime story comes up, ask what the aviation parallel is and vice versa"
         ],
         "user_instructions": """
-The hosts are Marcus and Priya:
+The hosts are Gary McGee and Margaret Ann Jenkins:
 
-MARCUS (Host 1 - Technical perspective):
+GARY McGEE (Host 1 - Technical perspective):
 - Former engineer who explains things through weird but memorable analogies
 - Gets excited about elegant technical solutions
 - Self-aware about going too deep - catches himself mid-tangent
@@ -158,18 +162,32 @@ MARCUS (Host 1 - Technical perspective):
 - Verbal tics: "So here's the thing...", "Wait, it gets better...", "Okay but actually..."
 - Pet peeves: sloppy comparisons, marketing buzzwords, buried limitations
 
-PRIYA (Host 2 - Business/applications perspective):
+MARGARET ANN JENKINS (Host 2 - Business/applications perspective):
 - Product management background - understands tech AND business
 - Translates technical stuff into "what this means for people building products"
-- Warmly sarcastic, teases Marcus when he goes too deep
+- Warmly sarcastic, teases Gary when he goes too deep
 - Asks the "dumb questions" that aren't actually dumb
 - Keeps receipts on what companies promised vs delivered
 - Verbal tics: "Okay but here's my question...", "Let's be real for a second...", "I'm going to be that person and ask..."
 - Calls out vaporware and hype
 
+IMPORTANT FORMAT:
+- This is a FIVE MINUTE broadcast - keep it tight and punchy
+- Open with: "The News in the World of Beacon Tech in five minutes"
+- Cover only the top stories, skip filler
+- Wrap up quickly with one key takeaway
+
+CRITICAL - BALANCED COVERAGE:
+- ACR operates in BOTH aerospace/aviation (ELTs) AND maritime (EPIRBs, PLBs)
+- ALWAYS cover BOTH sectors — do NOT lean heavily maritime or heavily aviation
+- If the news is mostly maritime, add aerospace/ELT context, analysis, or implications
+- If the news is mostly aviation, add maritime/EPIRB context, analysis, or implications
+- Reference FAA, EASA, TSOs, avionics, general aviation safety alongside USCG, IMO, SOLAS
+- Beacon tech spans BOTH worlds — Cospas-Sarsat serves aviation AND maritime
+
 DYNAMIC:
 - Genuine rapport - they interrupt each other, finish thoughts, have friendly arguments
-- Marcus goes deep on "how", Priya pulls back to "so what"
+- Gary goes deep on "how", Margaret pulls back to "so what"
 - They fact-check each other in real time
 - Inside jokes about perpetually skeptical companies
 - 70% informative, 20% funny, 10% spicy takes
@@ -211,7 +229,7 @@ DYNAMIC:
         return audio_file
 
 
-def send_podcast_email(audio_path, date):
+def send_podcast_email(audio_path, date, test_recipient=None):
     """Send the podcast as an email attachment using Resend"""
 
     # Read the audio file
@@ -221,8 +239,12 @@ def send_podcast_email(audio_path, date):
     import base64
     audio_base64 = base64.b64encode(audio_data).decode('utf-8')
 
-    # Get recipients from database (with env var fallback)
-    recipients = get_digest_recipients()
+    # Use test recipient if provided, otherwise get from database
+    if test_recipient:
+        recipients = [test_recipient]
+        print(f"   TEST MODE: Sending only to {test_recipient}")
+    else:
+        recipients = get_digest_recipients()
 
     response = requests.post(
         'https://api.resend.com/emails',
@@ -236,9 +258,9 @@ def send_podcast_email(audio_path, date):
             'subject': f'🎙️ The ACR Report Podcast — {date}',
             'html': f'''
                 <h1>🎙️ The ACR Report Podcast</h1>
-                <p>Marcus and Priya break down today's key developments in SAR, aviation, maritime, and the broader safety equipment industry.</p>
+                <p>Gary McGee and Margaret Ann Jenkins bring you the news in the world of beacon tech in five minutes.</p>
                 <p><strong>Date:</strong> {date}</p>
-                <p>The audio file is attached to this email. Listen to stay ahead of regulatory changes, competitor moves, and industry trends.</p>
+                <p>The audio file is attached to this email. Five minutes to stay ahead of regulatory changes, competitor moves, and industry trends.</p>
                 <hr>
                 <p style="color: #666; font-size: 12px;">
                     The ACR Report — Industry intelligence for aerospace & marine safety
@@ -260,8 +282,16 @@ def send_podcast_email(audio_path, date):
 
 
 def main():
+    import argparse
+    parser = argparse.ArgumentParser(description='ACR Intel Podcast Generator')
+    parser.add_argument('--test', type=str, metavar='EMAIL',
+                        help='Send test broadcast to a single email address')
+    args = parser.parse_args()
+
     print("=" * 50)
     print("ACR Intel Agent - Podcast Generator")
+    if args.test:
+        print(f"*** TEST MODE — sending to {args.test} only ***")
     print("=" * 50)
 
     # Get latest digest
@@ -294,7 +324,7 @@ def main():
 
     # Send email
     print("\n4. Sending podcast via email...")
-    if send_podcast_email(output_path, date):
+    if send_podcast_email(output_path, date, test_recipient=args.test):
         print("   Success!")
     else:
         print("   Failed to send email")
