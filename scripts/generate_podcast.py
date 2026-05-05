@@ -177,6 +177,12 @@ IMPORTANT FORMAT:
 - Cover only the top stories, skip filler
 - Wrap up quickly with one key takeaway
 
+CRITICAL - NO GPS OPENING:
+- NEVER open the podcast with a GPS/GNSS/satellite constellation story
+- GPS topics should be brief mentions at most, never the lead story
+- If the top-ranked item is about GPS, skip to the next non-GPS story to open with
+- Generic GPS/GNSS news is filler, not headline material
+
 CRITICAL - BALANCED COVERAGE:
 - ACR operates in BOTH aerospace/aviation (ELTs) AND maritime (EPIRBs, PLBs)
 - ALWAYS cover BOTH sectors — do NOT lean heavily maritime or heavily aviation

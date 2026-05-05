@@ -54,6 +54,12 @@ Scoring for ACR relevance:
 - 40-59: Tangentially related industry news
 - 0-39: Low relevance to ACR's business
 
+IMPORTANT - GPS/GNSS deduplication:
+- Generic GPS/GNSS satellite constellation news (launches, accuracy improvements, new signals) is NOT directly about ACR's beacon business. Score these 20-35 MAX.
+- GPS/GNSS stories only score higher if they DIRECTLY involve: beacon frequency bands (406 MHz, 121.5 MHz), Cospas-Sarsat MEOSAR, EPIRB/ELT/PLB integration, or SAR satellite payloads.
+- Do NOT mark generic GPS/GNSS articles as must_read.
+- "Satellite" stories about GPS, Galileo, GLONASS, or BeiDou general operations are LOW relevance unless they mention search-and-rescue payloads specifically.
+
 Rules:
 - must_read = true ONLY for: beacon regulations, Cospas-Sarsat updates, competitor news, major FAA/IMO changes
 - hype_flag = true if: vague claims, no concrete details
