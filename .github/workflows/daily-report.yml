@@ -28,7 +28,15 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install podcastfy supabase python-dotenv requests anthropic playwright feedparser
+          pip install \
+            podcastfy==0.4.3 \
+            langsmith==0.6.1 \
+            langchain==0.3.27 \
+            langchain-core==0.3.81 \
+            litellm==1.80.0 \
+            edge-tts==7.2.7 \
+            anthropic==0.75.0 \
+            supabase python-dotenv requests playwright feedparser
           playwright install chromium
 
       - name: Step 1 - Ingest RSS feeds
