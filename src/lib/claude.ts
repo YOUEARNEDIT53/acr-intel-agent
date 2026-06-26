@@ -82,7 +82,7 @@ export async function summarizeItem(
   const anthropic = getAnthropicClient();
 
   const message = await anthropic.messages.create({
-    model: 'claude-sonnet-4-20250514',
+    model: 'claude-sonnet-4-6',
     max_tokens: 500,
     messages: [
       {
@@ -147,7 +147,7 @@ export async function generateExecutiveSummary(
     .join('\n');
 
   const message = await anthropic.messages.create({
-    model: 'claude-sonnet-4-20250514',
+    model: 'claude-sonnet-4-6',
     max_tokens: 300,
     messages: [
       {

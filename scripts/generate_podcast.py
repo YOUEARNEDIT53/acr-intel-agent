@@ -207,7 +207,7 @@ DYNAMIC:
         audio_file = generate_podcast(
             text=text_content,
             tts_model="edge",  # Free Microsoft Edge TTS
-            llm_model_name="anthropic/claude-sonnet-4-20250514",  # Use Claude
+            llm_model_name="anthropic/claude-sonnet-4-6",  # Use Claude
             api_key_label="ANTHROPIC_API_KEY",
             conversation_config=conversation_config
         )
@@ -226,7 +226,7 @@ DYNAMIC:
         audio_file = generate_podcast(
             text=text_content,
             tts_model="edge",
-            llm_model_name="anthropic/claude-sonnet-4-20250514",
+            llm_model_name="anthropic/claude-sonnet-4-6",
             api_key_label="ANTHROPIC_API_KEY"
         )
         if audio_file and Path(audio_file).exists():
