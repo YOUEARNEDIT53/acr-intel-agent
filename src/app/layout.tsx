@@ -50,6 +50,12 @@ export default function RootLayout({
                   Sources
                 </Link>
                 <Link
+                  href="/transparency"
+                  className="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium"
+                >
+                  Transparency
+                </Link>
+                <Link
                   href="/settings"
                   className="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium"
                 >
