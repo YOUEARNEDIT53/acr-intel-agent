@@ -124,32 +124,26 @@ def generate_podcast_audio(text_content, output_path):
     """Generate podcast audio using Podcastfy with Edge TTS (free)"""
 
     # Gary & Margaret conversation config - industry intelligence style
-    # Target: ~5 minutes (~650 words at 130 wpm)
+    # Target ~5 min, HARD cap 6 min. word_count tuned DOWN for claude-sonnet-4-6 verbosity:
+    # old model ran 5:39 at 650 words; claude-sonnet-4-6 ran 9:12 at the same setting.
+    # Belt-and-suspenders: enforce_max_duration() trims anything over 6 min after generation.
     conversation_config = {
-        "word_count": 650,
+        "word_count": 300,
         "conversation_style": ["informative", "analytical", "conversational", "witty", "skeptical"],
         "podcast_name": "The ACR Report Podcast",
         "podcast_tagline": "The News in the World of Beacon Tech in five minutes",
-        "creativity": 0.85,
+        "creativity": 0.5,
         "roles_person1": "Margaret Ann Jenkins",
         "roles_person2": "Gary McGee",
         "dialogue_structure": [
             "Quick intro - 'The News in the World of Beacon Tech in five minutes'",
-            "Critical Updates - top 1-2 regulatory or major industry news items",
-            "Brief analysis - business and technical implications",
-            "Quick Hits - rapid-fire remaining updates",
-            "Sign off with key takeaway"
+            "Top 1-2 stories only - the news plus a SHORT implication",
+            "Sign off with one key takeaway"
         ],
         "engagement_techniques": [
-            "Gary explains technical details with memorable analogies",
-            "Margaret translates implications for product and business teams",
-            "They ask each other follow-up questions",
-            "Reference what companies said vs what they're doing now",
-            "Occasional dry humor and friendly disagreements",
-            "Call out hype vs substance",
-            "Connect stories to broader industry trends",
-            "Always bridge between aerospace/ELT and maritime/EPIRB implications",
-            "If a maritime story comes up, ask what the aviation parallel is and vice versa"
+            "Gary explains the technical bit briefly; Margaret gives the business 'so what'",
+            "One short aerospace/ELT <-> maritime/EPIRB bridge",
+            "Occasional dry humor - but keep it moving"
         ],
         "user_instructions": """
 The hosts are Gary McGee and Margaret Ann Jenkins:
@@ -172,6 +166,8 @@ MARGARET ANN JENKINS (Host 2 - Business/applications perspective):
 - Calls out vaporware and hype
 
 IMPORTANT FORMAT:
+- HARD LIMIT: the ENTIRE episode MUST run UNDER 6 MINUTES — aim for about 5. This is the #1 rule.
+- Keep the TOTAL spoken script to ~700 words MAX across BOTH hosts combined. Be ruthless; cut, don't pad.
 - This is a FIVE MINUTE broadcast - keep it tight and punchy
 - Open with: "The News in the World of Beacon Tech in five minutes"
 - Cover only the top stories, skip filler
@@ -198,6 +194,11 @@ DYNAMIC:
 - Inside jokes about perpetually skeptical companies
 - 70% informative, 20% funny, 10% spicy takes
 - Never punching down - humor about industry hype, not individuals
+
+LENGTH IS THE TOP PRIORITY (overrides everything above):
+- Write a TIGHT show: at most ~26 short dialogue turns total and ~700 spoken words combined across both hosts.
+- It MUST feel like 5 minutes, not 10. Cover only the top 1-2 stories. Do not pad, recap, or repeat.
+- Output ONLY the final spoken dialogue in the required tag format - NO analysis, NO outline, NO planning notes, NO "(scratchpad)".
 """,
         "output_language": "English"
     }
@@ -233,6 +234,39 @@ DYNAMIC:
             shutil.move(audio_file, output_path)
             return str(output_path)
         return audio_file
+
+
+def enforce_max_duration(path, max_seconds=355, fade=3):
+    """Hard guarantee the episode ends under 6 minutes. Trims with a fade-out if over."""
+    import subprocess, re, shutil as _sh
+    path = str(path)
+    ff = _sh.which("ffmpeg") or "/usr/local/bin/ffmpeg"
+    try:
+        info = subprocess.run([ff, "-i", path], capture_output=True, text=True).stderr
+    except Exception as e:
+        print(f"   (length guard skipped: {e})")
+        return
+    m = re.search(r"Duration:\s*(\d+):(\d+):(\d+\.?\d*)", info)
+    if not m:
+        print("   (length guard: could not read duration)")
+        return
+    dur = int(m.group(1)) * 3600 + int(m.group(2)) * 60 + float(m.group(3))
+    print(f"   Episode length: {dur/60:.2f} min")
+    if dur <= max_seconds:
+        return
+    print(f"   Over 6-min cap -> trimming to {max_seconds}s with {fade}s fade-out")
+    tmp = path + ".trim.mp3"
+    st = max(0, max_seconds - fade)
+    r = subprocess.run(
+        [ff, "-y", "-i", path, "-t", str(max_seconds),
+         "-af", f"afade=t=out:st={st}:d={fade}",
+         "-c:a", "libmp3lame", "-b:a", "32k", tmp],
+        capture_output=True, text=True)
+    if os.path.exists(tmp) and os.path.getsize(tmp) > 0:
+        _sh.move(tmp, path)
+        print(f"   Trimmed to under {max_seconds/60:.2f} min")
+    else:
+        print(f"   (trim failed, leaving original): {r.stderr[-300:]}")
 
 
 def send_podcast_email(audio_path, date, test_recipient=None):
@@ -324,6 +358,8 @@ def main():
     try:
         audio_file = generate_podcast_audio(text_content, output_path)
         print(f"   Podcast saved to: {audio_file}")
+        # Hard cap: episodes must end under 6 minutes
+        enforce_max_duration(output_path, max_seconds=355)
     except Exception as e:
         print(f"   Error: {e}")
         sys.exit(1)
